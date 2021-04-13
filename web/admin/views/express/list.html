@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/list.css"/>
+		<link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.17.1/bootstrap-table.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+		<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.17.1/bootstrap-table.min.js"></script>
+		<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.17.1/locale/bootstrap-table-zh-CN.min.js"></script>
+	</head>
+	<body>
+		<table id="express_list"></table>
+		<script>
+			$(function () {
+				$("#express_list").bootstrapTable({
+					url:"/express/list.do", // 数据地址
+					striped:true, // 是否显示行的间隔
+					pageNumber:1, // 初始化加载第几页
+					pagination:true, // 是否分页
+					sidePagination:'server', // 指定前端或后端分页
+					pageSize:5, // 页面加载数量
+					pageList:[5, 10, 20], // 选择页面加载数量
+					showRefresh:true, // 添加刷新列表按钮
+					queryParams:function (params) {
+						return {
+							offset: params.offset,
+							pageNumber: params.limit
+						};
+					},
+					columns:[
+						{
+							title:"编号",
+							field:"id",
+							sortable:false
+						},
+						{
+							title:"单号",
+							field:"number",
+							sortable:false
+						},
+						{
+							title:"姓名",
+							field:"username",
+							sortable:false
+						},
+						{
+							title:"电话",
+							field:"userphone",
+							sortable:false
+						},
+						{
+							title:"快递公司",
+							field:"company",
+							sortable:false
+						},
+						{
+							title:"取件码",
+							field:"code",
+							sortable:false
+						},
+						{
+							title:"入库时间",
+							field:"intime",
+							sortable:false
+						},
+						{
+							title:"出库时间",
+							field:"outtime",
+							sortable:false
+						},
+						{
+							title:"状态",
+							field:"status",
+							sortable:false
+						},
+						{
+							title:"录入人电话",
+							field:"sysPhone",
+							sortable:false
+						}
+					]
+				});
+			});
+		</script>
+	</body>
+</html>

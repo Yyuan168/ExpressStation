@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/add.css"/>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header">
+				<span>删除用户账号</span>
+			</div>
+			<div class="content">
+				<table>	
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input inline-input" placeholder="请输入手机号码"> <span class="btn btn-info" id="find">立即查找</span></td>
+					</tr>
+				</table>
+			</div>
+			
+			
+			<div class="header">
+				<span>查找信息如下</span>
+			</div>
+			<div class="content">
+				<table>
+					<tr>
+						<td class="text-right">姓名</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input" placeholder="请输入手机号码"></td>
+					</tr>
+					<tr>
+						<td class="text-right">身份证号码</td><td class="content_right"><input class="input" placeholder="请输入身份证号"></td>
+					</tr>
+					<tr>
+						<td class="text-right">密码</td><td class="content_right"><input class="input" placeholder="请输入密码"></td>
+					</tr>
+					<tr>
+						<td></td><td class="content_right"><span class="btn btn-info" id="delete">立即删除</span>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</body>
+	<script src="/qrcode/jquery2.1.4.js"></script>
+	<script src="/layer/layer.js"></script>
+	<script>
+		//查找到信息之前先隐藏内容部分
+		$(".header:eq(1),.content:eq(1)").hide();
+		var userId = null;
+		$(function(){
+			$("#find").click(function(){
+				var windowId = layer.load();
+				var userPhone = $("input:eq(0)").val();
+				//判断输入的手机号格式是否合理
+				function checkUserPhone() {
+					if (userPhone.match(/^1[0-9]{10}$/)) {
+						return true;
+					} else {
+						alert("请输入一个由1开头的11位整数的电话号码");
+						layer.close(windowId);
+						return false;
+					}
+				}
+				if (checkUserPhone()){
+					$.getJSON("/user/findByUserPhone.do",{userPhone:userPhone},function(data){
+						layer.close(windowId);
+						layer.msg(data.result);
+						if (data.status==0){
+							//一秒内显示数据栏位
+							$(".header:eq(1),.content:eq(1)").fadeIn(1000);
+							//存储下可能将要删除的Id
+							userId = data.data.id;
+							$("input:eq(1)").val(data.data.userName);
+							$("input:eq(2)").val(data.data.userPhone);
+							$("input:eq(3)").val(data.data.idNumber);
+							$("input:eq(4)").val(data.data.password);
+							//保证输入框为不可修改值状态
+							$("input:eq(1),input:eq(2),input:eq(3),input:eq(4)").prop("disabled",true)
+						}else {
+							//如果查询失败则隐藏内容栏
+							$(".header:eq(1),.content:eq(1)").hide();
+						}
+					},"JSON");
+				}
+				return false;
+			});
+
+			$("#delete").click(function () {
+				var windowId = layer.load();
+				$.getJSON("/user/delete.do",{id:userId},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0){
+						//如果删除成功，则重新隐藏内容部分，以待新的快递单号输入，再生产新的数据
+						$(".header:eq(1),.content:eq(1)").hide();
+					}else {
+						//录入失败
+					}
+				},"JSON");
+				return false;
+			});
+		});
+	</script>
+</html>

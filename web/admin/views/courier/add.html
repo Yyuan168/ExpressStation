@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/add.css"/>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header">
+				<span>添加快递员</span>
+			</div>
+			<div class="content">
+				<table>
+					<tr>
+						<td class="text-right">姓名</td><td class="content_right"><input class="input" placeholder="请输入姓名（最长10个字符）"></td>
+					</tr>
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input id="check_sysPhone" class="input" placeholder="请输入手机号码（11位数字）"></td>
+					</tr>
+					<tr>
+						<td class="text-right">身份证号码</td><td class="content_right"><input id="check_idNumber" class="input" placeholder="请输入身份证号码（18位数字，容许最后一位为“X”）"></td>
+					</tr>
+					<tr>
+						<td class="text-right">密码</td><td class="content_right"><input class="input" placeholder="请输入密码（8-16位大小写英文字母、数字）"></td>
+					</tr>
+					<tr>
+						<td></td><td class="content_right"><span class="btn btn-info" id="submit">立即提交</span> <span class="btn" id="reset">重置</span> </td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<script src="../../assets/layui.all.js"></script>
+		<script src="/qrcode/jquery2.1.4.js"></script>
+		<script>
+			var form = layui.form,layer = layui.layer;
+		</script>
+		<script>
+
+			// 正则检查输入姓名字符数量是否有误
+			function checkCname() {
+				// 输入框不为空
+				if ($("input:eq(0)").val() === "") {
+					layer.tips("输入框不能为空", "input:eq(0)", {tipsMore:true,tips:2});
+					$("input:eq(0)").css("border-color","red");
+					return true;
+				} else {
+					let cname = $("input:eq(0)").val();
+					if (cname.length > 10) {
+						layer.tips("姓名字符数量最多10个", "input:eq(0)", {tipsMore: true});
+						$("input:eq(0)").css("borderColor", "red");
+						return true;
+					}
+				}
+				$("input:eq(0)").css("border-color","#E5E6E7");
+				return false;
+			}
+
+			// 查询快递员手机格式是否正确或重复
+			function checkSysPhone() {
+				// 输入框不为空
+				if ($("#check_sysPhone").val() === "") {
+					layer.tips("输入框不能为空", "#check_sysPhone", {tipsMore:true,tips:2});
+					$("#check_sysPhone").css("border-color","red");
+					return true;
+				} else {
+					let sysPhone = $("#check_sysPhone").val();
+					// 正则检查输入手机格式是否有误
+					var pat = new RegExp("^[0-9]{11}$");
+					if (!pat.test(sysPhone)) {
+						layer.tips("此处只能输入11位纯数字", "#check_sysPhone", {tipsMore: true});
+						$("#check_sysPhone").css("border-color", "red");
+						return true;
+					}
+					$.post("/courier/check.do", {
+						type: "sysPhone",
+						content: sysPhone
+					}, function (data) {
+						if (data.status != 0) {
+							layer.tips("手机号码已存在", "#check_sysPhone", {tipsMore: true});
+							$("#check_sysPhone").css("border-color", "red");
+							return true;
+						}
+					});
+				}
+				$("#check_sysPhone").css("border-color", "#E5E6E7");
+				return false;
+			}
+
+			// 查询快递员身份证号码格式是否有误或重复
+			function checkIDNumber() {
+				// 输入框不为空
+				if ($("#check_idNumber").val() === "") {
+					layer.tips("输入框不能为空", "#check_idNumber", {tipsMore:true,tips:2});
+					$("#check_idNumber").css("border-color","red");
+					return true;
+				} else {
+					let idNumber = $("#check_idNumber").val();
+					// 正则检查输入身份证号码格式是否有误
+					var pat = new RegExp("^[0-9]{17}[X0-9]$");
+					if (!pat.test(idNumber)) {
+						layer.tips("此处只能输入18位数字的身份证号码，容许末尾为“X”", "#check_idNumber", {tipsMore: true});
+						$("#check_idNumber").css("border-color", "red");
+						return true;
+					}
+					$.post("/courier/check.do", {
+						type: "idNumber",
+						content: idNumber
+					}, function (data) {
+						if (data.status != 0) {
+							layer.tips("身份证号码已存在", "#check_idNumber", {tipsMore: true});
+							$("#check_idNumber").css("border-color", "red");
+							return true;
+						}
+					});
+				}
+				$("#check_idNumber").css("border-color", "#E5E6E7");
+				return false;
+			}
+
+			// 正则检查输入密码格式是否有误
+			function checkPassword() {
+				// 输入框不为空
+				if ($("input:eq(3)").val() === "") {
+					layer.tips("输入框不能为空", "input:eq(3)", {tipsMore:true,tips:2});
+					$("input:eq(3)").css("border-color","red");
+					return true;
+				} else {
+					let password = $("input:eq(3)").val();
+					if (password !== "") {
+						var pat = /^[A-Za-z0-9]{8,16}$/;
+						if (!pat.test(password)) {
+							layer.tips("密码只接受8-16为的大小写英文字母及数字", "input:eq(3)", {tipsMore: true});
+							$("input:eq(3)").css("borderColor", "red");
+							return true;
+						}
+					}
+				}
+				$("input:eq(3)").css("border-color", "#E5E6E7");
+				return false;
+			}
+
+			$(function () {
+
+				// 正则检查输入姓名字符数量是否有误
+				$("input:eq(0)").focusout(checkCname);
+
+				// 查询快递员手机格式是否正确或重复
+				$("#check_sysPhone").focusout(checkSysPhone);
+
+				// 查询快递员身份证号码格式是否有误或重复
+				$("#check_idNumber").focusout(checkIDNumber);
+
+				// 正则检查输入密码格式是否有误
+				$("input:eq(3)").focusout(checkPassword);
+
+				// 提交，添加快递员
+				$("#submit").click(function () {
+					let windowId = layer.load();
+					// cname
+					let flag = checkCname();
+					// sysPhone
+					flag = checkSysPhone() || flag;
+					// idNumber
+					flag = checkIDNumber() || flag;
+					// password
+					flag = checkPassword() || flag;
+					if (flag) {
+						layer.close(windowId);
+						layer.msg("请输入正确格式后再提交！！")
+						return;
+					}
+					let cname = $("input:eq(0)").val();
+					let sysPhone = $("input:eq(1)").val();
+					let idNumber = $("input:eq(2)").val();
+					let password = $("input:eq(3)").val();
+					$.post("/courier/insert.do", {
+						cname: cname,
+						sysPhone: sysPhone,
+						idNumber: idNumber,
+						password: password
+					}, function (data) {
+						layer.close(windowId);
+						layer.msg(data.result);
+						if (data.status == 0) {
+							$("input").val("");
+						}
+					});
+					// 不需要跳转页面
+				});
+
+				// 重置
+				$("#reset").click(function () {
+					$("input:eq(0)").val("");
+					$("input:eq(1)").val("");
+					$("input:eq(2)").val("");
+					$("input:eq(3)").val("");
+					$("input").css("border-color","#E5E6E7");
+				});
+			});
+		</script>
+	</body>
+</html>

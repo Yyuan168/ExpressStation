@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/add.css"/>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header">
+				<span>删除快递信息</span>
+			</div>
+			<div class="content">
+				<table>	
+					<tr>
+						<td class="text-right">运单号</td><td class="content_right"><input class="input inline-input" id="number" placeholder="请输入运单号码"> <span class="btn btn-info" id="find">立即查找</span></td>
+					</tr>
+				</table>
+			</div>
+			
+			
+			<div class="header">
+				<span>查找信息如下</span>
+			</div>
+			<div class="content">
+				<table>
+					<tr>
+						<td class="text-right">快递单号</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">快递公司</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">收货人姓名</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">快递状态</td><td class="content_right" id="status"></td>
+					</tr>
+					<tr>
+						<td></td><td class="content_right"><span class="btn btn-info" id="delete">立即删除</span> <span class="btn" id="cancel">取消</span> </td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</body>
+	<script src="/qrcode/jquery2.1.4.js"></script>
+	<script src="/layer/layer.js"></script>
+	<script>
+
+		// 查询输入的快递单号格式是否正确
+		function checkNumberFormat() {
+			// 输入框不为空
+			if ($("#number").val() === "") {
+				layer.tips("输入框不能为空", "#number", {tipsMore:true,tips:2});
+				$("#number").css("border-color","red");
+				return null;
+			} else {
+				var tmp = $("#number").val();
+				// 正则检查输入手机格式是否有误
+				var pat = new RegExp("^[0-9]{14}$");
+				if (!pat.test(tmp)) {
+					layer.tips("此处只能输入11位纯数字", "#number", {tipsMore: true});
+					$("#number").css("border-color", "red");
+					return null;
+				}
+			}
+			$("#number").css("border-color", "#E5E6E7");
+			return tmp;
+		}
+
+		$(function () {
+			let expressId = null;
+			$(".header:eq(1), .content:eq(1)").hide();
+
+			$("#number").focusout(checkNumberFormat);
+
+			$("#find").click(function () {
+				let windowId = layer.load();
+				let number = $("#number").val();
+				$.getJSON("/express/find.do",{number:number},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0) {
+						$(".header:eq(1), .content:eq(1)").fadeIn(1000);
+						expressId = data.data.id;
+						$("input:eq(1)").val(data.data.number);
+						$("input:eq(2)").val(data.data.company);
+						$("input:eq(3)").val(data.data.username);
+						$("input:eq(4)").val(data.data.userphone);
+						$("input:eq(1), input:eq(2), input:eq(3), input:eq(4)").prop("disabled", true);
+						if(data.data.status == 0) {
+							// 未签收
+							$("#status").html("未签收");
+						} else {
+							// 已签收
+							$("#status").html("已签收");
+						}
+					} else {
+						$(".header:eq(1), .content:eq(1)").hide();
+						$("#sysPhone").val("");
+						$("input").css("border-color", "#E5E6E7");
+					}
+				});
+			});
+
+			$("#delete").click(function () {
+				let windowId = layer.load();
+				$.getJSON("/express/delete.do",{id:expressId},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0) {
+						// 删除成功
+						$(".header:eq(1), .content:eq(1)").hide();
+					}
+				});
+			});
+
+			$("#cancel").click(function () {
+				$(".header:eq(1), .content:eq(1)").hide();
+				$("#sysPhone").val("");
+				$("input").css("border-color", "#E5E6E7");
+			});
+
+		});
+	</script>
+</html>

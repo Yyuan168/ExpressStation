@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/list.css"/>
+		<link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.17.1/bootstrap-table.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+		<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.17.1/bootstrap-table.min.js"></script>
+		<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.17.1/locale/bootstrap-table-zh-CN.min.js"></script>
+		<script src="/layer/layer.js"></script>
+		<style>
+			.layui-layer-content{
+				color: #fff;
+			}
+		</style>
+	</head>
+	<body>
+	<script>
+		function reLoad(pageNumber) {
+			//销毁，重新加载数据，并显示对应页码内新的数据
+			$("#user_list").bootstrapTable('selectPage', pageNumber);
+		}
+		function addFunctionAlty(value, row, index) {
+			//返回要添加的按钮属性
+			return [
+				'<button id="delete" type="button" class="btn btn-default">删除</button>',
+			].join('');
+		}
+		window.operateEvents = {
+			'click #delete': function (e, value, row, index) {
+				//获取当前行的id数据
+				var id = $("#user_list").bootstrapTable('getData')[index].id;
+				//执行删除数据操作成功时，执行刷新操作
+				$.getJSON("/user/delete.do",{id:id},function (data) {
+					layer.msg(data.result);
+				},"JSON");
+				//获取当前页面的页码
+				var pageNumber = $("#user_list").bootstrapTable("getOptions").pageNumber;
+				//刷新页面
+				reLoad(pageNumber);
+			}
+		};
+	</script>
+	<table id="user_list"></table>
+	<script>
+		$(function () {
+			$("#user_list").bootstrapTable({
+				url:"/user/list.do",//地址
+				striped:true,//是否显示行的间隔
+				pageNumber:1,//初始化加载第几页
+				pagination:true,//是否分页
+				//服务器端分页还是客户端分页
+				sidePagination:"server",
+				pageSize:5,//每页显示数量
+				pageList:[5,10,20],//页数的可选按钮
+				//刷新按钮（用户卡住时可以有好的解决方案）
+				showRefresh:true,
+				//向服务器传递参数
+				queryParams:function(params){
+					var temp = {
+						/*limit:params.pagination,*/
+						offset:params.offset,
+						pageNumber:params.limit
+					};
+					return temp;
+				},
+				//服务器给的数据有哪些列，配置出来
+				columns:[
+					{
+						//列名
+						title:"编号",
+						//服务器内存储数据的名称
+						field:"id",
+						//是否为可跳转升序降序的表格
+						sortable:false
+					},
+					{
+						title:"用户名",
+						field:"userName"
+					},
+					{
+						title:"账号密码",
+						field:"password"
+					},
+					{
+						title:"用户身份证号",
+						field:"idNumber"
+					},
+					{
+						title:"用户手机号",
+						field:"userPhone"
+					},
+					{
+						title:"注册时间",
+						field:"registerTime"
+					},
+					{
+						title:"上次登录时间",
+						field:"loginTime"
+					},
+					{
+						title: '操作',
+						field: 'operate',
+						events: operateEvents,//给按钮注册事件
+						formatter: addFunctionAlty//表格中增加按钮  
+					}
+				]
+			});
+		})
+	</script>
+	</body>
+</html>

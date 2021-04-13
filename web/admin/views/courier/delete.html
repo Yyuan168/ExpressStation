@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/add.css"/>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header">
+				<span>删除快递员</span>
+			</div>
+			<div class="content">
+				<table>	
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input inline-input" placeholder="请输入手机号码" id="sysPhone"> <span class="btn btn-info" id="find">立即查找</span></td>
+					</tr>
+				</table>
+			</div>
+			
+			
+			<div class="header">
+				<span>查找信息如下</span>
+			</div>
+			<div class="content">
+				<table>
+					<tr>
+						<td class="text-right">姓名</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">身份证号码</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">密码</td><td class="content_right"><input class="input" placeholder="请输入姓名"></td>
+					</tr>
+					<tr>
+						<td></td><td class="content_right"><span class="btn btn-info" id="delete">立即删除</span> <span class="btn" id="cancel">取消</span> </td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</body>
+	<script src="/qrcode/jquery2.1.4.js"></script>
+	<script src="/layer/layer.js"></script>
+	<script>
+
+		// 查询快递员手机格式是否正确或重复
+		function checkSysPhoneFormat() {
+			// 输入框不为空
+			if ($("#sysPhone").val() === "") {
+				layer.tips("输入框不能为空", "#sysPhone", {tipsMore:true,tips:2});
+				$("#sysPhone").css("border-color","red");
+				return null;
+			} else {
+				var tmp = $("#sysPhone").val();
+				// 正则检查输入手机格式是否有误
+				var pat = new RegExp("^[0-9]{11}$");
+				if (!pat.test(tmp)) {
+					layer.tips("此处只能输入11位纯数字", "#sysPhone", {tipsMore: true});
+					$("#sysPhone").css("border-color", "red");
+					return null;
+				}
+			}
+			$("#sysPhone").css("border-color", "#E5E6E7");
+			return tmp;
+		}
+
+		$(function () {
+			let courierId = null;
+			$(".header:eq(1), .content:eq(1)").hide();
+
+			$("#sysPhone").focusout(checkSysPhoneFormat);
+
+			$("#find").click(function () {
+				let windowId = layer.load();
+				let sysPhone_tmp = checkSysPhoneFormat();
+				if (sysPhone_tmp == null) {
+					layer.close(windowId);
+					return;
+				}
+				$.getJSON("/courier/find.do",{sysPhone:sysPhone_tmp},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0) {
+						$(".header:eq(1), .content:eq(1)").fadeIn(1000);
+						courierId = data.data.id;
+						$("input:eq(1)").val(data.data.cname);
+						$("input:eq(2)").val(data.data.sysPhone);
+						$("input:eq(3)").val(data.data.idNumber);
+						$("input:eq(4)").val(data.data.password);
+						$("input:eq(1), input:eq(2), input:eq(3), input:eq(4)").prop("disabled", true);
+					} else {
+						$(".header:eq(1), .content:eq(1)").hide();
+						$("#sysPhone").val("");
+						$("input").css("border-color", "#E5E6E7");
+					}
+				});
+			});
+
+			$("#delete").click(function () {
+				let windowId = layer.load();
+				$.getJSON("/courier/delete.do",{id:courierId},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0) {
+						// 删除成功
+						$(".header:eq(1), .content:eq(1)").hide();
+						$("#sysPhone").val("");
+					}
+				});
+			});
+
+			$("#cancel").click(function () {
+				$(".header:eq(1), .content:eq(1)").hide();
+				$("#sysPhone").val("");
+				$("input").css("border-color", "#E5E6E7");
+			});
+		});
+	</script>
+</html>

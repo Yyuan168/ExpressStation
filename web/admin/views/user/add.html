@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/add.css"/>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header">
+				<span>添加用户</span>
+			</div>
+			<div class="content">
+				<table>
+					<tr>
+						<td class="text-right">姓名</td><td class="content_right"><input class="input" placeholder="请输入姓名（1-18个字符）"></td>
+					</tr>
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input" placeholder="请输入手机号码（11位数字）"></td>
+					</tr>
+					<tr>
+						<td class="text-right">身份证号码</td><td class="content_right"><input class="input" placeholder="请输入身份证号（18位数字，最后一位可以为大写X）"></td>
+					</tr>
+					<tr>
+						<td class="text-right">密码</td><td class="content_right"><input class="input" placeholder="请输入密码（6-18位任意字符）"></td>
+					</tr>
+					<tr>
+						<td></td><td class="content_right"><span class="btn btn-info" id="insert">立即提交</span>
+						<span class="btn" id="reset">重置</span> </td>
+					</tr>
+				</table>
+				
+				
+			</div>
+		</div>
+		<script src="../../assets/layui.all.js"></script>
+		<script src="/qrcode/jquery2.1.4.js"></script>
+		<script src="/layer/layer.js"></script>
+		<script>
+			$(function () {
+				$("#insert").click(function () {
+					var windowId = layer.load();
+					var userName = $("input:eq(0)").val();
+					var userPhone = $("input:eq(1)").val();
+					var idNumber = $("input:eq(2)").val();
+					var password = $("input:eq(3)").val();
+					var check = 0;
+					//判断输入的账号格式是否合理
+					function checkUserName() {
+						/* 符合要求则返回true，否则返回false */
+						if (userName.match(/^[\u4e00-\u9fa5 -~]+$/)) {
+							return true;
+						} else {
+							alert("请输入1~18位中文、英文、数字、英文标点符号（排除中文标点符号）格式的登陆账号");
+							layer.close(windowId);
+							return false;
+						}
+					}
+					function checkUserPhone() {
+						if (userPhone.match(/^1[0-9]{10}$/)) {
+							return true;
+						} else {
+							alert("请输入一个由1开头的11位整数的电话号码");
+							layer.close(windowId);
+							return false;
+						}
+					}
+					function checkIdNumber() {
+						if (idNumber.match(/^[0-9]{17}[X0-9]$/)) {
+							return true;
+						} else {
+							alert("请输入正确的18位身份证号,容许末尾为大写的X");
+							layer.close(windowId);
+							return false;
+						}
+					}
+					function checkPassword() {
+						if (password.length >= 6 && password.length <= 18) {
+							return true;
+						} else {
+							alert("请输入6~18位任意字符的登陆密码");
+							layer.close(windowId);
+							return false;
+						}
+					}
+					if (checkUserName()&&checkUserPhone()&&checkIdNumber()&checkPassword()) {
+						$.post("/user/add.do", {
+							userName: userName,
+							userPhone: userPhone,
+							idNumber:idNumber,
+							password:password
+						}, function (data) {
+							layer.close(windowId);
+							layer.msg(data.result);
+							if (data.status == 0) {
+								//录入成功
+								//重置输入栏内容
+								$("input").val("");
+							} else {
+								//录入失败，不需要清空输入栏，让用户可以做修改
+							}
+						}, "JSON");
+					}
+					return false;
+				});
+				$("#reset").click(function () {
+					$("input:eq(0)").val("") ;
+					$("input:eq(1)").val("") ;
+					$("input:eq(2)").val("") ;
+					$("input:eq(3)").val("") ;
+				});
+			});
+		</script>
+	</body>
+</html>

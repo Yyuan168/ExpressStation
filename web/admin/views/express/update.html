@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../../css/reset.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/add.css"/>
+	</head>
+	<body>
+		<div id="app">
+			<div class="header">
+				<span>修改快递信息</span>
+			</div>
+			<div class="content">
+				<table>	
+					<tr>
+						<td class="text-right">运单号</td><td class="content_right"><input class="input inline-input" id="number" placeholder="请输入运单号码"> <span class="btn btn-info" id="find">立即查找</span></td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="header">
+				<span>查找信息如下</span>
+			</div>
+			<div class="content">
+				<table>
+					<tr>
+						<td class="text-right">快递单号</td><td class="content_right"><input class="input" placeholder="请输入快递单号"></td>
+					</tr>
+					<tr>
+						<td class="text-right">快递公司</td><td class="content_right"><input class="input" placeholder="请输入快递公司名称"></td>
+					</tr>
+					<tr>
+						<td class="text-right">收货人姓名</td><td class="content_right"><input class="input" placeholder="请输入收件人姓名"></td>
+					</tr>
+					<tr>
+						<td class="text-right">手机号码</td><td class="content_right"><input class="input" placeholder="请输入手机号码"></td>
+					</tr>
+<!--					<tr>-->
+<!--						<td class="text-right">快递状态</td><td class="content_right"><input type="radio" name="status">已签收  <input name="status" type="radio">未签收</td>-->
+<!--					</tr>-->
+					<tr>
+						<td></td><td class="content_right"><span class="btn btn-info" id="update">立即修改</span> <span class="btn" id="cancel">取消</span> </td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</body>
+	<script src="/qrcode/jquery2.1.4.js"></script>
+	<script src="/layer/layer.js"></script>
+	<script>
+
+		// 查询输入的快递单号格式是否正确
+		function checkNumberFormat() {
+			// 输入框不为空
+			if ($("#number").val() === "") {
+				layer.tips("输入框不能为空", "#number", {tipsMore:true,tips:2});
+				$("#number").css("border-color","red");
+				return null;
+			} else {
+				var tmp = $("#number").val();
+				// 正则检查输入手机格式是否有误
+				var pat = new RegExp("^[0-9]{14}$");
+				if (!pat.test(tmp)) {
+					layer.tips("此处只能输入11位纯数字", "#number", {tipsMore: true});
+					$("#number").css("border-color", "red");
+					return null;
+				}
+			}
+			$("#number").css("border-color", "#E5E6E7");
+			return tmp;
+		}
+
+		// 检查修改后的快递单号格式及是否重复
+		function checkNumber(number) {
+			// 输入框不为空
+			if ($("input:eq(1)").val() === "") {
+				layer.tips("输入框不能为空", "input:eq(1)", {tipsMore:true,tips:2});
+				$("input:eq(1)").css("border-color","red");
+				return true;
+			} else {
+				var tmp = $("input:eq(1)").val();
+				// 正则检查输入手机格式是否有误
+				var pat = new RegExp("^[0-9]{14}$");
+				if (!pat.test(tmp)) {
+					layer.tips("此处只能输入11位纯数字", "input:eq(1)", {tipsMore: true});
+					$("input:eq(1)").css("border-color", "red");
+					return true;
+				}
+				// 可以跟原来的号码相同，但不可以跟其它courier相同
+				if (tmp !== number) {
+					$.post("/express/find.do", {
+						type: "number",
+						content: tmp
+					}, function (data) {
+						if (data.status != 0) {
+							layer.tips("快递单号已存在", "input:eq(1)", {tipsMore: true});
+							$("#input:eq(1)").css("border-color", "red");
+							return true;
+						}
+					});
+				}
+			}
+			$("input:eq(1)").css("border-color","#E5E6E7");
+			return false;
+		}
+
+		// 检查快递公司输入格式
+		function checkCompany() {
+			// 输入框不为空
+			if ($("input:eq(2)").val() === "") {
+				layer.tips("输入框不能为空", "input:eq(2)", {tipsMore: true, tips: 2});
+				$("input:eq(2)").css("border-color", "red");
+				return true;
+			}
+			$("input:eq(2)").css("border-color","#E5E6E7");
+			return false;
+		}
+
+		// 检查取件人姓名格式
+		function checkUsername() {
+			// 输入框不为空
+			if ($("input:eq(3)").val() === "") {
+				layer.tips("输入框不能为空", "input:eq(3)", {tipsMore:true,tips:2});
+				$("input:eq(3)").css("border-color","red");
+				return true;
+			} else {
+				let name = $("input:eq(3)").val();
+				if (name.length > 10) {
+					layer.tips("姓名字符数量最多10个", "input:eq(3)", {tipsMore: true});
+					$("input:eq(3)").css("borderColor", "red");
+					return true;
+				}
+			}
+			$("input:eq(3)").css("border-color","#E5E6E7");
+			return false;
+		}
+
+		// 检查取件人手机号码格式
+		function checkPhonenumber() {
+			// 输入框不为空
+			if ($("input:eq(4)").val() === "") {
+				layer.tips("输入框不能为空", "input:eq(4)", {tipsMore:true,tips:2});
+				$("input:eq(4)").css("border-color","red");
+				return true;
+			} else {
+				let Phonenumber = $("input:eq(4)").val();
+				// 正则检查输入手机格式是否有误
+				var pat = new RegExp("^[0-9]{11}$");
+				if (!pat.test(Phonenumber)) {
+					layer.tips("此处只能输入11位纯数字", "input:eq(4)", {tipsMore: true});
+					$("input:eq(4)").css("border-color", "red");
+					return true;
+				}
+			}
+			$("input:eq(4)").css("border-color", "#E5E6E7");
+			return false;
+		}
+
+		$(function () {
+			let expressId = null;
+			$(".header:eq(1), .content:eq(1)").hide();
+
+			$("#number").focusout(checkNumberFormat);
+			var number = null;
+
+			$("#find").click(function () {
+				let windowId = layer.load();
+				let number_tmp = checkNumberFormat();
+				if (number_tmp == null) {
+					layer.close(windowId);
+					return;
+				}
+				$.getJSON("/express/find.do",{number:number_tmp},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0) {
+						$(".header:eq(1), .content:eq(1)").fadeIn(1000);
+						expressId = data.data.id;
+						number = data.data.number;
+						$("input:eq(1)").val(number);
+						$("input:eq(2)").val(data.data.company);
+						$("input:eq(3)").val(data.data.username);
+						$("input:eq(4)").val(data.data.userphone);
+					} else {
+						$(".header:eq(1), .content:eq(1)").hide();
+						$("#sysPhone").val("");
+						$("input").css("border-color", "#E5E6E7");
+					}
+				});
+			});
+
+			$("input:eq(1)").focusout(function () {
+				checkNumber(number);
+			});
+			$("input:eq(2)").focusout(checkCompany);
+			$("input:eq(3)").focusout(checkUsername);
+			$("input:eq(4)").focusout(checkPhonenumber);
+
+			$("#update").click(function () {
+				let windowId = layer.load();
+				let flag = checkNumber(number);
+				flag = checkCompany() || flag;
+				flag = checkUsername() || flag;
+				flag = checkPhonenumber() || flag;
+				if (flag) {
+					layer.close(windowId);
+					layer.msg("请输入正确格式后再提交！！")
+					return;
+				}
+				let number_tmp = $("input:eq(1)").val();
+				let company_tmp = $("input:eq(2)").val();
+				let username_tmp = $("input:eq(3)").val();
+				let userphone_tmp = $("input:eq(4)").val();
+				$.getJSON("/express/update.do",{
+					id:expressId,
+					number:number_tmp,
+					company:company_tmp,
+					username:username_tmp,
+					userphone:userphone_tmp
+				},function (data) {
+					layer.close(windowId);
+					layer.msg(data.result);
+					if (data.status == 0) {
+						// 修改成功
+						$(".header:eq(1), .content:eq(1)").hide();
+					}
+				});
+			});
+
+			$("#cancel").click(function () {
+				$(".header:eq(1), .content:eq(1)").hide();
+				$("#sysPhone").val("");
+				$("input").css("border-color", "#E5E6E7");
+			});
+
+		});
+	</script>
+</html>
